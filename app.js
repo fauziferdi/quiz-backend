@@ -13,7 +13,9 @@ app.use(bodyParser.json());
 app.post("/api/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
-
+    if (!username || !email || !password){
+      res.status(400).json({error: "Semua kolom harus diisi !"})
+    }
     const [result] = await db.query(
       "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
       [username, email, password]
@@ -59,6 +61,21 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// get categories
+app.get("/api/categories", async (req,res)=>{
+  try{
+    const [categories ]= await db.query(
+      "SELECT * FROM categories"
+    )
+    res.json(categories)
+  }catch (error){
+    res.status(500).json({error:error.message});
+  }
+})
+
+// get 
+
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
