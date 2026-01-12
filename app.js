@@ -13,8 +13,8 @@ app.use(bodyParser.json());
 app.post("/api/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    if (!username || !email || !password){
-      res.status(400).json({error: "Semua kolom harus diisi !"})
+    if (!username || !email || !password) {
+      res.status(400).json({ error: "Semua kolom harus diisi !" });
     }
     const [result] = await db.query(
       "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
@@ -63,19 +63,33 @@ app.post("/api/login", async (req, res) => {
 });
 
 // get categories
-app.get("/api/categories", async (req,res)=>{
-  try{
-    const [categories ]= await db.query(
-      "SELECT * FROM categories"
-    )
-    res.json(categories)
-  }catch (error){
-    res.status(500).json({error:error.message});
+app.get("/api/categories", async (req, res) => {
+  try {
+    const [categories] = await db.query("SELECT * FROM categories");
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
-// get 
+// get quizzes
+app.get("/api/quizzes", async (req, res) => {
+  try {
+    const categoryId = req.query.category_id;
+    let = query = "SELECT * FROM quizzes";
+    let params = [];
 
+    if (categoryId) {
+      query += " WHERE category_id = ?";
+      params.push(categoryId);
+    }
+
+    const [quizzes] = await db.query(query, params);
+    res.json(quizzes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
