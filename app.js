@@ -129,6 +129,22 @@ app.get("/api/quizzes/:id/questions", async (req, res) => {
   }
 });
 
+//api save score
+app.post("/api/results", async (req, res) => {
+  try {
+    const { user_id, quiz_id, score, total_correct } = req.body;
+
+    const [result] = await db.query(
+      "INSERT INTO results (user_id, quiz_id, score, total_correct) VALUES (?, ?, ?, ?)",
+      [user_id, quiz_id, score, total_correct]
+    );
+
+    res.json({ message: "Skor berhasil disimpan", resultId: result.insertId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
 });
