@@ -13,8 +13,8 @@ app.use(bodyParser.json());
 app.post("/api/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    if (!username || !email || !password){
-      res.status(400).json({error: "Semua kolom harus diisi !"})
+    if (!username || !email || !password) {
+      res.status(400).json({ error: "Semua kolom harus diisi !" });
     }
     const [result] = await db.query(
       "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
@@ -63,19 +63,71 @@ app.post("/api/login", async (req, res) => {
 });
 
 // get categories
-app.get("/api/categories", async (req,res)=>{
-  try{
-    const [categories ]= await db.query(
-      "SELECT * FROM categories"
-    )
-    res.json(categories)
-  }catch (error){
-    res.status(500).json({error:error.message});
+app.get("/api/categories", async (req, res) => {
+  try {
+    const [categories] = await db.query("SELECT * FROM categories");
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
-// get 
+// get quizzes
+app.get("/api/quizzes", async (req, res) => {
+  try {
+    const categoryId = req.query.category_id;
+    let = query = "SELECT * FROM quizzes";
+    let params = [];
 
+    if (categoryId) {
+      query += " WHERE category_id = ?";
+      params.push(categoryId);
+    }
+
+    const [quizzes] = await db.query(query, params);
+    res.json(quizzes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// api get quiz with selected quizzes
+app.get("/api/quizzes/:id/questions", async (req, res) => {
+  try {
+    const quizId = req.params.id;
+
+    const [quizInfo] = await db.query(
+      "SELECT title, difficulty FROM quizzes WHERE id = ?",
+      [quizId]
+    );
+    if (quizInfo.length === 0)
+      return res.status(404).json({ error: "Quiz not found" });
+
+    const [questions] = await db.query(
+      "SELECT * FROM questions WHERE quiz_id = ?",
+      [quizId]
+    );
+
+    for (let i = 0; i < questions.length; i++) {
+      const [options] = await db.query(
+        "SELECT id, option_text as text, is_correct FROM options WHERE question_id = ?",
+        [questions[i].id]
+      );
+      questions[i].options = options.map((opt) => ({
+        ...opt,
+        is_correct: opt.is_correct === 1,
+      }));
+    }
+    res.json({
+      quiz_title: quizInfo[0].title,
+      difficulty: quizInfo[0].difficulty,
+      questions: questions,
+    });
+  } catch (error) {
+    console.error("Error Get Questions:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
